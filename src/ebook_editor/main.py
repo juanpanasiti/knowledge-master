@@ -15,19 +15,17 @@ from ebook_editor.ui.components.editor import VDITOR_HEAD_HTML
 
 GLOBAL_STYLES = """
 <style>
-  html, body {
+  html, body, #app, .q-layout, .q-page-container, .q-page, .nicegui-content {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
     height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
     overflow: hidden !important;
-  }
-  .q-page, .nicegui-content {
-    padding: 0 !important;
-    margin: 0 !important;
-    height: 100% !important;
-    width: 100% !important;
-    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
   }
   ::-webkit-scrollbar {
     width: 6px;
@@ -59,7 +57,7 @@ def setup_app(initial_ebook_path: str | None = None) -> AppState:
         ui.add_head_html(GLOBAL_STYLES)
         ui.add_head_html(VDITOR_HEAD_HTML)
         ui.dark_mode(value=(state.theme == "dark"))
-        root_container = ui.column().classes("w-full h-full p-0 m-0 gap-0 overflow-hidden bg-gray-950 text-gray-100 items-stretch")
+        root_container = ui.column().classes("w-full h-full flex-1 min-h-0 p-0 m-0 gap-0 overflow-hidden bg-gray-950 text-gray-100 items-stretch")
 
         dashboard_view: DashboardView | None = None
         workspace_view: WorkspaceView | None = None

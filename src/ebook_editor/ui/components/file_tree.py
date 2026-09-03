@@ -18,9 +18,11 @@ class FileTreeComponent:
         self.state = state
         self.on_select_chapter = on_select_chapter
         self.container: ui.column | None = None
+        self._chapter_elements: dict[str, ui.element] = {}
 
     def render(self) -> None:
         """Render the chapter explorer sidebar."""
+        self._chapter_elements.clear()
         if self.container is None:
             self.container = ui.column().classes("w-full h-full flex-1 min-h-0 flex flex-col p-3 gap-2 select-none items-stretch overflow-hidden")
         else:
@@ -60,15 +62,17 @@ class FileTreeComponent:
             and self.state.active_chapter.name == chapter.name
         )
 
-        item_classes = (
+        active_classes = "bg-indigo-600/30 text-indigo-300 font-medium border-l-2 border-indigo-500"
+        inactive_classes = "text-gray-300 hover:bg-gray-800/80 hover:text-gray-100"
+        base_classes = (
             "w-full px-2.5 py-1.5 rounded flex flex-row items-center justify-between text-xs cursor-pointer transition-colors group "
         )
-        if is_active:
-            item_classes += "bg-indigo-600/30 text-indigo-300 font-medium border-l-2 border-indigo-500"
-        else:
-            item_classes += "text-gray-300 hover:bg-gray-800/80 hover:text-gray-100"
+        current_classes = base_classes + (active_classes if is_active else inactive_classes)
 
-        with ui.element("div").classes(item_classes):
+        item_elem = ui.element("div").classes(current_classes)
+        self._chapter_elements[chapter.name] = item_elem
+
+        with item_elem:
             # Title with file icon
             with ui.row().classes("items-center gap-2 flex-grow truncate").on(
                 "click", lambda _, ch=chapter: self._handle_select(ch)
@@ -86,7 +90,14 @@ class FileTreeComponent:
 
     def _handle_select(self, chapter: ChapterFile) -> None:
         self.state.set_active_chapter(chapter)
-        self.render()
+        active_classes = "bg-indigo-600/30 text-indigo-300 font-medium border-l-2 border-indigo-500"
+        inactive_classes = "text-gray-300 hover:bg-gray-800/80 hover:text-gray-100"
+        for ch_name, elem in self._chapter_elements.items():
+            if ch_name == chapter.name:
+                elem.classes(remove=inactive_classes, add=active_classes)
+            else:
+                elem.classes(remove=active_classes, add=inactive_classes)
+
         self.on_select_chapter(chapter)
 
     def _show_new_chapter_dialog(self) -> None:

@@ -31,8 +31,10 @@ class WorkspaceView:
 
         self._right_panel_tab = "metadata"  # "metadata" or "git"
         self._right_panel_visible = True
+        self._editor_width_mode = "centered"  # "centered" or "full"
         self._save_status_label = None
         self._word_count_label = None
+        self._width_toggle_btn = None
         self._right_panel_container = None
 
     def render(self) -> None:
@@ -96,9 +98,17 @@ class WorkspaceView:
                             current_title = self.state.active_chapter.title if self.state.active_chapter else "No chapter selected"
                             self._chapter_title_label = ui.label(current_title).classes("font-medium text-gray-300")
 
-                        with ui.row().classes("items-center gap-4 text-[11px]"):
+                        with ui.row().classes("items-center gap-3 text-[11px]"):
                             self._word_count_label = ui.label("0 words")
                             self._save_status_label = ui.label("Saved").classes("text-emerald-400 font-medium")
+                            self._width_toggle_btn = ui.button(
+                                icon="open_in_full" if self._editor_width_mode == "centered" else "close_fullscreen",
+                                on_click=self._toggle_editor_width,
+                            ).props("flat round dense size=xs").classes("text-gray-400 hover:text-white")
+                            with self._width_toggle_btn:
+                                self._width_tooltip = ui.tooltip(
+                                    "Switch to Full Width" if self._editor_width_mode == "centered" else "Switch to Centered Reading Width"
+                                )
 
                     # Vditor Component Container
                     initial_content = ""
@@ -109,6 +119,7 @@ class WorkspaceView:
                         self.editor = VditorEditor(
                             initial_value=initial_content,
                             theme=self.state.theme,
+                            width_mode=self._editor_width_mode,
                             on_save=self._handle_editor_save,
                             on_typing=self._handle_editor_typing,
                         )
@@ -146,6 +157,17 @@ class WorkspaceView:
     def _toggle_right_panel(self) -> None:
         self._right_panel_visible = not self._right_panel_visible
         self._render_right_panel()
+
+    def _toggle_editor_width(self) -> None:
+        self._editor_width_mode = "full" if self._editor_width_mode == "centered" else "centered"
+        if self.editor:
+            self.editor.set_width_mode(self._editor_width_mode)
+        if self._width_toggle_btn:
+            new_icon = "close_fullscreen" if self._editor_width_mode == "full" else "open_in_full"
+            new_tooltip = "Switch to Centered Reading Width" if self._editor_width_mode == "full" else "Switch to Full Width"
+            self._width_toggle_btn.set_icon(new_icon)
+            if self._width_tooltip:
+                self._width_tooltip.set_text(new_tooltip)
 
     def _handle_chapter_selected(self, chapter: ChapterFile) -> None:
         if not chapter.path.exists():

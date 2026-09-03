@@ -1,32 +1,86 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+# Project Context
+# Injected into the AI context when generating OpenSpec artifacts.
+context: |
+  Project: Knowledge Master - Local markdown eBook editor and workspace manager.
+  Tech Stack:
+    - Language: Python >= 3.11 (modern syntax, use `X | None` instead of `Optional`, strict typing).
+    - UI Framework: NiceGUI >= 2.0.0 running in desktop mode via pywebview[qt] >= 5.0.0.
+    - Data & Models: Pydantic >= 2.7.0.
+    - VCS & Storage: GitPython >= 3.1.40, Platformdirs, Natsort.
+    - Package & Environment Manager: uv.
+    - Build System: Hatchling.
+    - Testing: pytest, pytest-asyncio.
+  Architecture & Directory Structure:
+    - src/ebook_editor/core/: Business logic, data models, and headless services:
+        * models.py: Domain models and Pydantic schemas.
+        * workspace.py: Workspace lifecycle, chapter and file management.
+        * git_service.py: Git operations and status tracking.
+        * config.py: User configuration and app settings.
+        * asset_server.py: Local asset serving.
+    - src/ebook_editor/ui/: User interface built with NiceGUI:
+        * components/: Modular UI components (editor.py, file_tree.py, git_panel.py, metadata_panel.py).
+        * dashboard.py: Main workspace dashboard and selection view.
+        * workspace_view.py: Active workspace layout and view management.
+        * state.py: Global and reactive UI application state.
+  Standard Commands:
+    - Run App: uv run knowledge-master
+    - Run Tests: uv run pytest
+  Guiding Principles:
+    - Never assume unstated requirements; proactively ask clarifying questions.
+    - Inspect existing patterns in core/ and ui/ before designing solutions.
+    - Prioritize existing dependencies in pyproject.toml before considering new third-party packages.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+# Per-Artifact Rules
+# Rules applied when creating specific OpenSpec planning artifacts.
+rules:
+  proposal:
+    - "All content and descriptions must be written in English."
+    - "Do not generate artifacts with assumed information; ask for clarification on any unstated requirements."
+    - "Explicitly define User Impact, Goals, and Non-Goals."
+    - "Document all known constraints, dependencies, and architectural impact across affected subsystems."
+    - "Assess SemVer impact (patch, minor, major) to decide whether pyproject.toml version needs a bump."
+  specs:
+    - "All content, requirements, and scenarios must be written in English."
+    - "Specify clear, testable acceptance criteria for every capability."
+    - "Format scenarios with structured preconditions, triggers, and expected outcomes (e.g., Given/When/Then)."
+    - "Cover edge cases, input validation, and expected error handling explicitly."
+    - "Use strict delta format (ADD, MODIFY, REMOVE) matching the capability structure."
+  design:
+    - "All architectural descriptions, diagrams, and rationale must be written in English."
+    - "Define component responsibilities and interaction between UI (NiceGUI) and backend services (core/)."
+    - "Document data flow, reactive state updates in state.py, and Pydantic model alterations."
+    - "Address UX considerations, asynchronous events, and responsiveness within pywebview."
+    - "Outline technical trade-offs and justify why the chosen approach was preferred over alternatives."
+  tasks:
+    - "All task descriptions, comments, and instructions must be written in English."
+    - "Enumerate tasks and subtasks hierarchically (e.g., Task 1 with subtasks 1.1, 1.2; Task 2 with 2.1, 2.2)."
+    - "Organize task sequence logically: core/models first, UI components next, integration/wiring, followed by tests and documentation."
+    - "Specify concrete verification methods for each task (e.g., specific test commands or manual UI checks)."
+    - "Include a task to update the version in pyproject.toml if the change has SemVer impact (new features, fixes, or breaking changes)."
+    - "Include a task/subtask to review and update README.md if the changes affect project usage, setup, or architecture."
+    - "Include a final validation task at the very end to verify that the implementation satisfies all requirements established in the proposal."
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+# Per-Operation Guidance
+# Advisory guidance for AI behavior during OpenSpec workflow operations.
+operations:
+  apply:
+    guidance:
+      - "Execute strictly one task/subtask at a time."
+      - "Do not proceed to the next task before completing, validating, and giving confirmation for the current one."
+      - "Run automated tests (`uv run pytest`) for backend/core changes, and perform visual/manual checks for UI changes."
+      - "All generated code, comments, documentation, and commit/task messages must strictly be in English."
+      - "Always use modern Python compatible with 3.11+. Avoid deprecated features and use modern type hints (e.g., `X | None` instead of `Optional[X]`)."
+      - "Strictly follow the PEP 8 standard."
+      - "Mark completed tasks in tasks.md as soon as each task or subtask is done."
+      - "Always check the README.md during implementation and update it if the changes warrant documentation updates."
+      - "If a task encounters unexpected issues or blockers, stop and report immediately without guessing."
+  archive:
+    guidance:
+      - "Ensure all unit and integration tests pass (`uv run pytest`) before finalizing."
+      - "Verify that all proposal goals and acceptance criteria were met before finalizing."
+      - "Confirm that delta specs are synchronized with the main specs in openspec/specs/."
+      - "Ensure README.md and pyproject.toml (if version was bumped) are up to date with the completed changes."
+      - "Summarize changes and outcomes in English in the archive output."
+      - "Suggest a Conventional Commit message (e.g., feat: ..., fix: ...) and ask for confirmation before committing changes to Git."
