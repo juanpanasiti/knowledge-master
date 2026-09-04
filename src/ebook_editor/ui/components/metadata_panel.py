@@ -78,31 +78,56 @@ class MetadataPanelComponent:
 
                 ui.button("Save Details", icon="save", on_click=handle_save).classes("bg-indigo-600 text-white size=sm")
 
-    def _handle_cover_upload(self, event: events.UploadEventArguments) -> None:
+    async def _handle_cover_upload(self, event: events.UploadEventArguments, dialog: ui.dialog) -> None:
         ws = self.state.current_workspace
         if not ws:
+            dialog.close()
             return
 
-        file_bytes = event.content.read()
-        ws.save_asset("cover.png", file_bytes)
-
-        # Update metadata if needed
         try:
-            meta = ws.load_metadata()
-            meta.cover_path = "assets/cover.png"
-            ws.save_metadata(meta)
-        except Exception:
-            pass
+            file_obj = getattr(event, "file", None)
+            if file_obj is not None:
+                res = file_obj.read()
+                file_bytes = await res if hasattr(res, "__await__") else res
+            else:
+                content = getattr(event, "content", None)
+                res = content.read() if content else b""
+                file_bytes = await res if hasattr(res, "__await__") else res
 
-        ui.notify("Cover image updated!", type="positive")
-        self.render()
+            ws.save_asset("cover.png", file_bytes)
+
+            # Update metadata if needed
+            try:
+                meta = ws.load_metadata()
+                meta.cover_path = "assets/cover.png"
+                ws.save_metadata(meta)
+            except Exception:
+                pass
+
+            try:
+                ui.notify("Cover image updated!", type="positive")
+            except Exception:
+                pass
+            dialog.close()
+            self.render()
+        except Exception as err:
+            try:
+                ui.notify(f"Error saving cover: {err}", type="negative")
+            except Exception:
+                pass
+        finally:
+            if getattr(dialog, "value", False) or not getattr(dialog, "closed", True):
+                try:
+                    dialog.close()
+                except Exception:
+                    pass
 
     def _show_cover_dialog(self) -> None:
         """Display clean modal dialog to upload ebook cover."""
         with ui.dialog() as dialog, ui.card().classes("w-80 p-5 gap-3"):
             ui.label("Change Ebook Cover").classes("text-base font-semibold")
             ui.upload(
-                on_upload=lambda e: (self._handle_cover_upload(e), dialog.close()),
+                on_upload=lambda e: self._handle_cover_upload(e, dialog),
                 auto_upload=True,
                 max_files=1,
             ).props('accept="image/*"').classes("w-full")

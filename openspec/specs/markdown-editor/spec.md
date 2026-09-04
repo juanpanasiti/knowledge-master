@@ -35,11 +35,15 @@ The editor and user interface SHALL default to a dark theme and SHALL provide an
 - **THEN** both the NiceGUI shell and the Vditor editor synchronously switch between dark and light color palettes.
 
 ### Requirement: Media Asset Insertion and Resolution
-The system SHALL support inserting images via drag & drop, clipboard paste (`Ctrl+V`), and manual file dialog, saving the image into `assets/` and inserting relative markdown paths.
+The system SHALL support inserting images via drag & drop, clipboard paste (`Ctrl+V`), manual file dialog, and the Vditor toolbar upload action, saving the image into the ebook's `assets/` directory, and SHALL immediately render the image inline using `vditor.insertMD()` without leaving unparsed markdown text.
 
 #### Scenario: Pasting an image from clipboard
 - **WHEN** the user pastes an image from the clipboard into Vditor
 - **THEN** the system writes the image file into the active ebook's `assets/` folder and inserts `![image](./assets/<filename>)` into the editor.
+
+#### Scenario: Uploading image via editor toolbar
+- **WHEN** the user uploads an image using the Vditor toolbar upload action
+- **THEN** the system saves the asset, invokes `vditor.insertMD()`, compiles the markdown into an image node via Lute, and renders the image preview inline immediately.
 
 ### Requirement: Local Dynamic Asset Serving
 The system SHALL serve images stored in the active ebook's `assets/` directory through a dedicated backend route ensuring relative links in markdown resolve properly.

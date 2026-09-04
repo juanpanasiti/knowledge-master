@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from pathlib import Path
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class EbookMetadata(BaseModel):
@@ -10,11 +10,18 @@ class EbookMetadata(BaseModel):
 
     title: str
     author: str
-    description: str = ""
+    description: str = Field(default="")
     cover_path: str = "assets/cover.png"
     tags: list[str] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    @field_validator("description", mode="before")
+    @classmethod
+    def normalize_description(cls, v: str | None) -> str:
+        if v is None:
+            return ""
+        return str(v)
 
     def save_to_file(self, target_path: Path) -> None:
         """Serialize and write metadata to a JSON file."""

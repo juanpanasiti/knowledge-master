@@ -83,7 +83,7 @@ class FileTreeComponent:
             # Action menu (rename / delete)
             with ui.button(icon="more_vert").props("flat round dense size=xs").classes(
                 "opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white transition-opacity"
-            ):
+            ).tooltip("Chapter options"):
                 with ui.menu().classes("bg-gray-800 text-white border border-gray-700"):
                     ui.menu_item("Rename", on_click=lambda _, ch=chapter: self._show_rename_dialog(ch))
                     ui.menu_item("Delete", on_click=lambda _, ch=chapter: self._show_delete_dialog(ch)).classes("text-red-400 hover:bg-red-950/40")

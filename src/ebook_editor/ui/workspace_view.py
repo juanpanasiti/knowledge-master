@@ -65,7 +65,11 @@ class WorkspaceView:
 
                 with ui.row().classes("items-center gap-2"):
                     # Clean Insert Image Button triggering dialog
-                    ui.button("Insert Image", icon="image", on_click=self._show_insert_image_dialog).props("flat dense size=sm").classes("text-xs text-gray-300")
+                    ui.button(
+                        "Insert Image",
+                        icon="image",
+                        on_click=self._show_insert_image_dialog,
+                    ).props("flat dense size=sm").classes("text-xs text-gray-300").tooltip("Insert image from ebook assets")
 
                     # Right panel toggle tabs
                     ui.toggle(
@@ -207,27 +211,53 @@ class WorkspaceView:
         if self._word_count_label:
             self._word_count_label.set_text(f"{words:,} words")
 
-    def _handle_manual_image_insert(self, event: events.UploadEventArguments) -> None:
+    async def _handle_manual_image_insert(self, event: events.UploadEventArguments, dialog: ui.dialog) -> None:
         ws = self.state.current_workspace
         if not ws or not self.editor:
+            dialog.close()
             return
 
-        file_bytes = event.content.read()
-        target_path = ws.save_asset(event.name, file_bytes)
+        try:
+            file_obj = getattr(event, "file", None)
+            if file_obj is not None:
+                filename = getattr(file_obj, "name", "image.png")
+                res = file_obj.read()
+                file_bytes = await res if hasattr(res, "__await__") else res
+            else:
+                filename = getattr(event, "name", "image.png")
+                content = getattr(event, "content", None)
+                res = content.read() if content else b""
+                file_bytes = await res if hasattr(res, "__await__") else res
 
-        # Append markdown image tag into active chapter
-        img_md = f"\n\n![{target_path.stem}](./assets/{target_path.name})\n"
-        new_content = self.editor.content + img_md
-        self.editor.set_content(new_content)
-        self._handle_editor_save(new_content)
-        ui.notify(f"Inserted image '{target_path.name}'", type="positive")
+            target_path = ws.save_asset(filename, file_bytes)
+
+            # Append markdown image tag into active chapter
+            img_md = f"\n\n![{target_path.name}](./assets/{target_path.name})\n"
+            new_content = self.editor.content + img_md
+            self.editor.set_content(new_content)
+            dialog.close()
+            try:
+                ui.notify(f"Inserted image '{target_path.name}'", type="positive")
+            except Exception:
+                pass
+        except Exception as err:
+            try:
+                ui.notify(f"Error inserting image: {err}", type="negative")
+            except Exception:
+                pass
+        finally:
+            if getattr(dialog, "value", False) or not getattr(dialog, "closed", True):
+                try:
+                    dialog.close()
+                except Exception:
+                    pass
 
     def _show_insert_image_dialog(self) -> None:
         """Display clean modal dialog to upload and insert image into chapter."""
         with ui.dialog() as dialog, ui.card().classes("w-96 p-5 gap-3"):
             ui.label("Insert Image into Chapter").classes("text-base font-semibold")
             ui.upload(
-                on_upload=lambda e: (self._handle_manual_image_insert(e), dialog.close()),
+                on_upload=lambda e: self._handle_manual_image_insert(e, dialog),
                 auto_upload=True,
                 max_files=1,
             ).props('accept="image/*"').classes("w-full")

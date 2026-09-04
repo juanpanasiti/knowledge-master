@@ -111,7 +111,10 @@ class GitPanelComponent:
                     for path in status.staged_files:
                         with ui.row().classes("w-full items-center justify-between px-2 py-1 bg-gray-800/40 rounded text-xs"):
                             ui.label(path).classes("font-mono text-[11px] truncate text-emerald-400")
-                            ui.button(icon="remove", on_click=lambda _, p=path: self._unstage_file(git_svc, p)).props("flat round dense size=xs").classes("text-gray-400 hover:text-red-400")
+                            ui.button(
+                                icon="remove",
+                                on_click=lambda _, p=path: self._unstage_file(git_svc, p),
+                            ).props("flat round dense size=xs").classes("text-gray-400 hover:text-red-400").tooltip("Unstage file")
 
             # 5. Changes (Unstaged & Untracked)
             all_changes = list(dict.fromkeys(status.unstaged_files + status.untracked_files))

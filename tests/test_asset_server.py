@@ -27,6 +27,12 @@ def test_asset_endpoints_with_active_workspace(tmp_path: Path) -> None:
     assert resp.status_code == 200
     assert resp.headers["content-type"] in ["image/png", "application/octet-stream"]
 
+    # 1b. Test relative route aliases /assets/ and /content/assets/
+    resp_rel = client.get("/assets/cover.png")
+    assert resp_rel.status_code == 200
+    resp_content_rel = client.get("/content/assets/cover.png")
+    assert resp_content_rel.status_code == 200
+
     # 2. Test 404 for missing asset
     resp404 = client.get("/api/workspace/assets/missing.png")
     assert resp404.status_code == 404

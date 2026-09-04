@@ -23,6 +23,26 @@ def test_ebook_metadata_serialization(tmp_path: Path) -> None:
     assert loaded.updated_at is not None
 
 
+def test_ebook_metadata_null_and_missing_description(tmp_path: Path) -> None:
+    # 1. Test null description in JSON payload
+    null_json = '{"title": "Test Book", "author": "Author", "description": null}'
+    p1 = tmp_path / "null_meta.json"
+    p1.write_text(null_json, encoding="utf-8")
+    loaded1 = EbookMetadata.load_from_file(p1)
+    assert loaded1.description == ""
+
+    # 2. Test missing description field in JSON payload
+    missing_json = '{"title": "Test Book 2", "author": "Author 2"}'
+    p2 = tmp_path / "missing_meta.json"
+    p2.write_text(missing_json, encoding="utf-8")
+    loaded2 = EbookMetadata.load_from_file(p2)
+    assert loaded2.description == ""
+
+    # 3. Direct instantiation with None
+    meta3 = EbookMetadata(title="Test Book 3", author="Author 3", description=None)
+    assert meta3.description == ""
+
+
 def test_app_settings_recent_ebooks(tmp_path: Path) -> None:
     settings = AppSettings()
     book1 = str(tmp_path / "book1")

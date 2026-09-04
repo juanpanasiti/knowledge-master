@@ -31,6 +31,8 @@ def register_asset_routes(
         nicegui_app.add_static_files("/static/vendor/vditor", str(STATIC_VDITOR_DIR))
         nicegui_app.add_static_files("/static/vendor/vditor/dist", str(STATIC_VDITOR_DIR))
 
+    @app.get("/assets/{file_path:path}")
+    @app.get("/content/assets/{file_path:path}")
     @app.get("/api/workspace/assets/{file_path:path}")
     async def serve_workspace_asset(file_path: str):
         """Serve a static asset from the active ebook project's assets directory."""

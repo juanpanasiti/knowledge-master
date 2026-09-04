@@ -92,7 +92,7 @@ class DashboardView:
                     ui.button(
                         icon="close",
                         on_click=lambda _, ps=path_str: self._remove_recent(ps),
-                    ).props("flat round dense size=sm").classes("text-gray-400 hover:text-red-400")
+                    ).props("flat round dense size=sm").classes("text-gray-400 hover:text-red-400").tooltip("Remove from recent")
 
     def _render_discovered_list(self) -> None:
         discovered = self.state.workspace_manager.discover_ebooks()
