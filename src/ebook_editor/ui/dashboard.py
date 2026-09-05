@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Callable
 from nicegui import ui
 
+from ebook_editor.core.export.credentials import resolve_kindle_credentials
 from ebook_editor.core.workspace import EbookWorkspace
 from ebook_editor.ui.state import AppState
 
@@ -220,31 +221,74 @@ class DashboardView:
     def _show_settings_dialog(self) -> None:
         settings = self.state.config_manager.load_settings()
         current_size = getattr(settings, "cover_size", "medium")
+        creds = resolve_kindle_credentials(app_settings=settings)
 
-        with ui.dialog() as dialog, ui.card().classes("w-96 p-6 gap-4"):
-            ui.label("Settings").classes("text-lg font-bold")
+        with ui.dialog() as dialog, ui.card().classes("w-[440px] p-6 gap-4 bg-gray-900 border border-gray-700 text-gray-200 select-none rounded-xl"):
+            ui.label("Settings").classes("text-lg font-bold text-gray-100")
 
-            ui.label("Book Cover Size").classes("text-sm font-semibold text-gray-300 mt-2")
-            size_options = {
-                "small": "Small (120px)",
-                "medium": "Medium - Default (150px)",
-                "large": "Large (185px)",
-            }
-            size_radio = ui.radio(
-                options=size_options,
-                value=current_size,
-            ).classes("gap-2")
+            # 1. Book Cover Size
+            with ui.column().classes("w-full gap-2 border-b border-gray-800 pb-4"):
+                ui.label("Book Cover Size").classes("text-xs font-semibold text-gray-300 uppercase tracking-wide")
+                size_options = {
+                    "small": "Small (120px)",
+                    "medium": "Medium - Default (150px)",
+                    "large": "Large (185px)",
+                }
+                size_radio = ui.radio(
+                    options=size_options,
+                    value=current_size,
+                ).classes("gap-1 text-xs text-gray-300")
+
+            # 2. Kindle & SMTP Delivery Settings
+            with ui.column().classes("w-full gap-2"):
+                with ui.row().classes("w-full justify-between items-center"):
+                    ui.label("Kindle & Email Delivery").classes("text-xs font-semibold text-gray-300 uppercase tracking-wide")
+                    if creds.is_configured():
+                        ui.badge("Configured", color="emerald").classes("text-[10px]")
+                    else:
+                        ui.badge("Incomplete", color="amber").classes("text-[10px]")
+
+                ui.label("Credentials cascade from ~/.config/ebook-maker/.env when empty.").classes("text-[11px] text-gray-400 leading-tight")
+
+                kindle_input = ui.input(
+                    "Kindle Email",
+                    value=settings.kindle_email or "",
+                    placeholder=creds.kindle_email or "e.g. reader@kindle.com",
+                ).classes("w-full text-xs")
+
+                smtp_user_input = ui.input(
+                    "SMTP User (Gmail)",
+                    value=settings.smtp_user or "",
+                    placeholder=creds.smtp_user or "e.g. author@gmail.com",
+                ).classes("w-full text-xs")
+
+                smtp_pass_input = ui.input(
+                    "SMTP App Password",
+                    value=settings.smtp_password or "",
+                    placeholder="••••••••••••••••" if creds.smtp_password else "Gmail App Password",
+                    password=True,
+                    password_toggle_button=True,
+                ).classes("w-full text-xs")
 
             def handle_save() -> None:
                 new_size = size_radio.value
                 self.state.config_manager.set_cover_size(new_size)
+
+                # Update email settings
+                updated_settings = self.state.config_manager.load_settings()
+                updated_settings.cover_size = new_size
+                updated_settings.kindle_email = kindle_input.value.strip() or None
+                updated_settings.smtp_user = smtp_user_input.value.strip() or None
+                updated_settings.smtp_password = smtp_pass_input.value.strip() or None
+                self.state.config_manager.save_settings(updated_settings)
+
                 dialog.close()
-                ui.notify(f"Cover size updated to {new_size}", type="positive")
+                ui.notify("Settings saved successfully", type="positive")
                 self.render()
 
             with ui.row().classes("w-full justify-end gap-2 mt-4"):
-                ui.button("Cancel", on_click=dialog.close).props("flat")
-                ui.button("Save", on_click=handle_save).classes("bg-indigo-600 text-white")
+                ui.button("Cancel", on_click=dialog.close).props("flat size=sm")
+                ui.button("Save", on_click=handle_save).classes("bg-indigo-600 text-white size=sm")
 
         dialog.open()
 

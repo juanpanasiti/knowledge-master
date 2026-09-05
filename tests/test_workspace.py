@@ -21,6 +21,8 @@ def test_create_ebook_structure(tmp_path: Path) -> None:
     assert (ws.root / "metadata.json").is_file()
     assert (ws.root / "assets" / "cover.png").is_file()
     assert (ws.root / "content" / "1.md").is_file()
+    assert (ws.root / "dist").is_dir()
+    assert ws.ensure_dist_dir() == ws.root / "dist"
 
     meta = ws.load_metadata()
     assert meta.title == "Python Guide"

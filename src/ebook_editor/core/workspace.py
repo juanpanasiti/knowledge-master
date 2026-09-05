@@ -58,18 +58,25 @@ class EbookWorkspace:
         self.metadata_path = self.root / "metadata.json"
         self.assets_dir = self.root / "assets"
         self.content_dir = self.root / "content"
+        self.dist_dir = self.root / "dist"
 
     def is_valid(self) -> bool:
         """Check if this folder contains a readable metadata.json file."""
         return self.root.is_dir() and self.metadata_path.is_file()
 
     def ensure_structure(self) -> None:
-        """Ensure that assets and content subdirectories exist."""
+        """Ensure that assets, content, and dist subdirectories exist."""
         self.assets_dir.mkdir(parents=True, exist_ok=True)
         self.content_dir.mkdir(parents=True, exist_ok=True)
+        self.dist_dir.mkdir(parents=True, exist_ok=True)
         cover_path = self.assets_dir / "cover.png"
         if not cover_path.exists():
             cover_path.write_bytes(get_default_cover_bytes())
+
+    def ensure_dist_dir(self) -> Path:
+        """Ensure that the dist/ directory exists and return its path."""
+        self.dist_dir.mkdir(parents=True, exist_ok=True)
+        return self.dist_dir
 
     def load_metadata(self) -> EbookMetadata:
         """Read and validate metadata.json."""

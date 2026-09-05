@@ -1,6 +1,6 @@
 [project]
 name = "knowledge-master"
-version = "0.2.0"
+version = "0.3.0"
 description = "Local markdown ebook editor and workspace manager built with Python and NiceGUI"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -11,6 +11,9 @@ dependencies = [
     "gitpython>=3.1.40",
     "platformdirs>=4.2.0",
     "natsort>=8.4.0",
+    "pypandoc>=1.16.2",
+    "weasyprint>=60.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [dependency-groups]

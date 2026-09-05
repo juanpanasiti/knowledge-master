@@ -13,6 +13,7 @@ class EbookMetadata(BaseModel):
     description: str = Field(default="")
     cover_path: str = "assets/cover.png"
     tags: list[str] = Field(default_factory=list)
+    finished: bool = Field(default=False, description="Whether the ebook is finalized for publication")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -44,6 +45,11 @@ class AppSettings(BaseModel):
     cover_size: str = "medium"
     window_width: int = 1280
     window_height: int = 800
+    kindle_email: str | None = None
+    smtp_user: str | None = None
+    smtp_password: str | None = None
+    smtp_server: str = "smtp.gmail.com"
+    smtp_port: int = 587
 
     def add_recent_ebook(self, path: str) -> None:
         """Add an ebook path to recent list, deduplicating and keeping the newest first."""

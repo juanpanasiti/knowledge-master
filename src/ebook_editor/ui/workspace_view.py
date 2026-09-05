@@ -6,6 +6,7 @@ from nicegui import events, ui
 
 from ebook_editor.core.workspace import ChapterFile, EbookWorkspace
 from ebook_editor.ui.components.editor import VditorEditor
+from ebook_editor.ui.components.export_dialog import ExportDialog
 from ebook_editor.ui.components.file_tree import FileTreeComponent
 from ebook_editor.ui.components.git_panel import GitPanelComponent
 from ebook_editor.ui.components.metadata_panel import MetadataPanelComponent
@@ -64,6 +65,13 @@ class WorkspaceView:
                         ui.label(f"• {meta.author}").classes("text-xs text-gray-500")
 
                 with ui.row().classes("items-center gap-2"):
+                    # Export & Publish Button
+                    ui.button(
+                        "Export",
+                        icon="ios_share",
+                        on_click=self._show_export_dialog,
+                    ).props("flat dense size=sm").classes("text-xs text-indigo-300 hover:text-white").tooltip("Export EPUB, PDF, and Send to Kindle")
+
                     # Clean Insert Image Button triggering dialog
                     ui.button(
                         "Insert Image",
@@ -264,4 +272,13 @@ class WorkspaceView:
             with ui.row().classes("w-full justify-end mt-2"):
                 ui.button("Cancel", on_click=dialog.close).props("flat size=sm")
         dialog.open()
+
+    def _show_export_dialog(self) -> None:
+        """Display the export, compilation, and Kindle delivery dialog."""
+        ws = self.state.current_workspace
+        if not ws:
+            return
+        dialog = ExportDialog(workspace=ws, config_manager=self.state.config_manager)
+        dialog.open()
+
 

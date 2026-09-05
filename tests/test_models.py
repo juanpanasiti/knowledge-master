@@ -61,8 +61,33 @@ def test_app_settings_recent_ebooks(tmp_path: Path) -> None:
     assert settings.recent_ebooks[0] == str(Path(book1).resolve())
 
     settings_path = tmp_path / "config.json"
+    settings.kindle_email = "reader@kindle.com"
+    settings.smtp_user = "author@gmail.com"
+    settings.smtp_password = "app-password"
     settings.save_to_file(settings_path)
 
     loaded = AppSettings.load_from_file(settings_path)
     assert loaded.recent_ebooks == settings.recent_ebooks
     assert loaded.theme == "dark"
+    assert loaded.kindle_email == "reader@kindle.com"
+    assert loaded.smtp_user == "author@gmail.com"
+    assert loaded.smtp_password == "app-password"
+    assert loaded.smtp_server == "smtp.gmail.com"
+    assert loaded.smtp_port == 587
+
+
+def test_ebook_metadata_finished_flag(tmp_path: Path) -> None:
+    meta = EbookMetadata(
+        title="Finished Book",
+        author="Author",
+        finished=True,
+    )
+    p = tmp_path / "meta_finished.json"
+    meta.save_to_file(p)
+
+    loaded = EbookMetadata.load_from_file(p)
+    assert loaded.finished is True
+
+    # Default should be False
+    default_meta = EbookMetadata(title="Draft Book", author="Author")
+    assert default_meta.finished is False
