@@ -14,6 +14,7 @@ def test_config_manager_initialization(tmp_path: Path) -> None:
     assert (root / "ebooks").exists()
     assert (root / "config.json").exists()
     assert settings.theme == "dark"
+    assert settings.cover_size == "medium"
 
 
 def test_config_manager_recent_ebooks(tmp_path: Path) -> None:
@@ -32,3 +33,20 @@ def test_config_manager_recent_ebooks(tmp_path: Path) -> None:
     manager.remove_recent_ebook(ebook_path)
     reloaded_after_removal = manager.load_settings()
     assert str(ebook_path.resolve()) not in reloaded_after_removal.recent_ebooks
+
+
+def test_config_manager_cover_size_persistence(tmp_path: Path) -> None:
+    root = tmp_path / "test-km"
+    manager = ConfigManager(root_dir=root)
+
+    settings = manager.load_settings()
+    assert settings.cover_size == "medium"
+
+    manager.set_cover_size("large")
+    reloaded = manager.load_settings()
+    assert reloaded.cover_size == "large"
+
+    manager.set_cover_size("small")
+    reloaded_small = manager.load_settings()
+    assert reloaded_small.cover_size == "small"
+

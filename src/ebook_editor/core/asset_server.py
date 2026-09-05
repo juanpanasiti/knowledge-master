@@ -26,10 +26,24 @@ def register_asset_routes(
     """Register workspace asset endpoints and static mounts onto the FastAPI app."""
 
     # Register Vditor static bundle if directory exists
+    # Note: /static/vendor/vditor/dist MUST be registered before /static/vendor/vditor
+    # so Starlette's router matches the more specific /dist prefix first.
     if STATIC_VDITOR_DIR.is_dir():
         from nicegui import app as nicegui_app
-        nicegui_app.add_static_files("/static/vendor/vditor", str(STATIC_VDITOR_DIR))
         nicegui_app.add_static_files("/static/vendor/vditor/dist", str(STATIC_VDITOR_DIR))
+        nicegui_app.add_static_files("/static/vendor/vditor", str(STATIC_VDITOR_DIR))
+
+    @app.get("/static/vendor/vditor/dist/{file_path:path}")
+    async def serve_vditor_dist_fallback(file_path: str):
+        """Explicit fallback route ensuring Vditor dist assets are served reliably across packaged wheels."""
+        requested_file = (STATIC_VDITOR_DIR / file_path).resolve()
+        try:
+            requested_file.relative_to(STATIC_VDITOR_DIR.resolve())
+        except ValueError:
+            raise HTTPException(status_code=403, detail="Access outside vditor directory forbidden.")
+        if not requested_file.is_file():
+            raise HTTPException(status_code=404, detail=f"Vditor asset '{file_path}' not found.")
+        return FileResponse(requested_file)
 
     @app.get("/assets/{file_path:path}")
     @app.get("/content/assets/{file_path:path}")

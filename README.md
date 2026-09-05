@@ -10,6 +10,11 @@ A native desktop markdown ebook editor and workspace manager built with Python a
 - **Fluid List Editing & Navigation**:
   - Outdent (`Shift+Tab`) and Indent (`Tab`) toolbar actions.
   - Automatic unindentation when pressing `Enter` or `Backspace` on empty nested list items to easily escape back to normal root paragraphs.
+- **Two-Tier Horizontal Bookshelf**:
+  - Horizontal scrolling shelf for Recent Projects with sleek card lift animations and hover-revealed removal (`×`).
+  - Full-height, vertical scrolling grid for the Workspace Library occupying all remaining vertical space.
+  - Realistic front-facing book covers featuring spine crease highlights, elevation drop shadows, custom cover support, and elegant fallback gradient covers.
+- **Configurable Cover Sizing**: Settings dialog accessible from the dashboard header with `Small`, `Medium` (default), and `Large` cover presets persisted across sessions.
 - **Local Asset Management & Media Insertion**: Drag & drop, clipboard paste, or file upload for chapter images and ebook covers, automatically resolved through relative paths and rendered instantly in the editor.
 - **Local Ebook Workspaces**: Standardized ebook structure (`metadata.json`, `assets/`, `content/`) with natural chapter numbering (`1 - Title.md`, `1.1 - Section.md`).
 - **Integrated Version Control**: Built-in Git staging, unstaging, commit creation, and commit history log.

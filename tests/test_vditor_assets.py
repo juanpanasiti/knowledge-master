@@ -17,3 +17,20 @@ def test_vditor_bundled_assets_exist() -> None:
 
     js_dir = static_dir / "js"
     assert js_dir.is_dir(), "Vditor js directory missing"
+
+
+def test_vditor_dist_route_serving() -> None:
+    """Verify that /static/vendor/vditor/dist routes serve assets successfully with HTTP 200."""
+    from fastapi import FastAPI
+    from starlette.testclient import TestClient
+    from ebook_editor.core.asset_server import register_asset_routes
+
+    test_app = FastAPI()
+    register_asset_routes(test_app, lambda: None)
+    client = TestClient(test_app)
+
+    # Test direct file
+    r1 = client.get("/static/vendor/vditor/dist/js/i18n/en_US.js")
+    assert r1.status_code == 200
+    assert "VditorI18n" in r1.text
+

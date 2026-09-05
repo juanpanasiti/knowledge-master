@@ -54,3 +54,11 @@ class ConfigManager:
         settings.theme = theme
         self.save_settings(settings)
         return settings
+
+    def set_cover_size(self, cover_size: str) -> AppSettings:
+        """Update active cover card size preset ('small', 'medium', or 'large') and persist."""
+        settings = self.load_settings()
+        settings.cover_size = cover_size
+        self.save_settings(settings)
+        return settings
+

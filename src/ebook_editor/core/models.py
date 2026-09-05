@@ -41,6 +41,7 @@ class AppSettings(BaseModel):
     recent_ebooks: list[str] = Field(default_factory=list)
     last_opened_ebook: str | None = None
     theme: str = "dark"
+    cover_size: str = "medium"
     window_width: int = 1280
     window_height: int = 800
 
