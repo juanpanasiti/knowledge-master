@@ -12,6 +12,27 @@ from ebook_editor.ui.state import AppState
 from ebook_editor.ui.workspace_view import WorkspaceView
 from ebook_editor.ui.components.editor import VDITOR_HEAD_HTML
 
+FAVICON_PATH = Path(__file__).parent / "static" / "favicon.png"
+
+
+def _configure_linux_window_branding() -> None:
+    """Set process program name, application name, and default GTK icon on Linux."""
+    if sys.platform != "linux":
+        return
+    try:
+        import gi
+        gi.require_version("Gtk", "3.0")
+        from gi.repository import GLib, Gtk
+        GLib.set_prgname("knowledge-master")
+        GLib.set_application_name("Knowledge Master")
+        if FAVICON_PATH.is_file():
+            Gtk.Window.set_default_icon_from_file(str(FAVICON_PATH))
+    except Exception:
+        pass
+
+
+_configure_linux_window_branding()
+
 
 GLOBAL_STYLES = """
 <style>
@@ -105,6 +126,10 @@ def run() -> None:
 
     state = setup_app(initial_ebook_path=args.path)
     use_native = not args.browser
+    favicon = FAVICON_PATH if FAVICON_PATH.is_file() else None
+
+    if use_native and favicon:
+        app.native.start_args["icon"] = str(favicon)
 
     # Launch NiceGUI
     try:
@@ -112,6 +137,7 @@ def run() -> None:
             native=use_native,
             window_size=(state.config_manager.load_settings().window_width, state.config_manager.load_settings().window_height),
             title="Knowledge Master",
+            favicon=favicon,
             reload=False,
             port=args.port,
         )
@@ -122,6 +148,7 @@ def run() -> None:
             ui.run(
                 native=False,
                 title="Knowledge Master",
+                favicon=favicon,
                 reload=False,
                 port=args.port,
             )

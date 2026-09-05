@@ -48,7 +48,25 @@ echo "-> Executable verified at: ${BIN_PATH}"
 # 3. Install Icon
 echo "-> Installing application icon..."
 mkdir -p "${ICON_DIR}"
+mkdir -p "${HOME}/.local/share/icons/hicolor/256x256/apps"
+mkdir -p "${HOME}/.local/share/icons/hicolor/scalable/apps"
+mkdir -p "${HOME}/.local/share/pixmaps"
+mkdir -p "${HOME}/.local/share/icons"
+
 cp -f "${SCRIPT_DIR}/assets/icon.png" "${ICON_DIR}/knowledge-master.png"
+cp -f "${SCRIPT_DIR}/assets/icon.png" "${HOME}/.local/share/icons/hicolor/256x256/apps/knowledge-master.png"
+cp -f "${SCRIPT_DIR}/assets/icon.png" "${HOME}/.local/share/icons/hicolor/scalable/apps/knowledge-master.png"
+cp -f "${SCRIPT_DIR}/assets/icon.png" "${HOME}/.local/share/pixmaps/knowledge-master.png"
+cp -f "${SCRIPT_DIR}/assets/icon.png" "${HOME}/.local/share/icons/knowledge-master.png"
+
+# Ensure user hicolor theme index exists for GTK theme validation
+if [ ! -f "${HOME}/.local/share/icons/hicolor/index.theme" ] && [ -f /usr/share/icons/hicolor/index.theme ]; then
+    cp /usr/share/icons/hicolor/index.theme "${HOME}/.local/share/icons/hicolor/index.theme"
+fi
+
+if command -v gtk-update-icon-cache &> /dev/null; then
+    gtk-update-icon-cache -f -t "${HOME}/.local/share/icons/hicolor" 2>/dev/null || true
+fi
 
 # 4. Generate Desktop Entry
 echo "-> Generating desktop entry..."
@@ -61,10 +79,10 @@ Name=Knowledge Master
 GenericName=Ebook Editor
 Comment=Local Markdown Ebook Studio and Workspace Manager
 Exec=${BIN_PATH} %U
-Icon=knowledge-master
+Icon=${ICON_DIR}/knowledge-master.png
 Terminal=false
 Categories=Office;WordProcessor;Development;Publishing;
-StartupWMClass=Knowledge Master
+StartupWMClass=knowledge-master
 MimeType=text/markdown;text/plain;
 Keywords=markdown;ebook;editor;writing;obsidian;
 EOF
