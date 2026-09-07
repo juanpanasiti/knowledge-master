@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Callable
 from nicegui import events, ui
 
-from ebook_editor.core.workspace import ChapterFile, EbookWorkspace
+from ebook_editor.core.workspace import ChapterFile, EbookWorkspace, WorkspaceFile
 from ebook_editor.ui.components.editor import VditorEditor
 from ebook_editor.ui.components.export_dialog import ExportDialog
 from ebook_editor.ui.components.file_tree import FileTreeComponent
@@ -107,7 +107,11 @@ class WorkspaceView:
                     with ui.row().classes("w-full h-8 flex-shrink-0 px-4 items-center justify-between border-b border-gray-800/60 bg-gray-900/30 text-xs text-gray-400 select-none"):
                         with ui.row().classes("items-center gap-2"):
                             ui.icon("edit_note", size="1rem").classes("text-indigo-400")
-                            current_title = self.state.active_chapter.title if self.state.active_chapter else "No chapter selected"
+                            current_file = self.state.active_file
+                            if current_file:
+                                current_title = current_file.name if getattr(current_file, "category", "content") == "resources" else current_file.title
+                            else:
+                                current_title = "No file selected"
                             self._chapter_title_label = ui.label(current_title).classes("font-medium text-gray-300")
 
                         with ui.row().classes("items-center gap-3 text-[11px]"):
@@ -181,13 +185,14 @@ class WorkspaceView:
             if self._width_tooltip:
                 self._width_tooltip.set_text(new_tooltip)
 
-    def _handle_chapter_selected(self, chapter: ChapterFile) -> None:
-        if not chapter.path.exists():
+    def _handle_chapter_selected(self, file_item: WorkspaceFile) -> None:
+        if not file_item.path.exists():
             return
 
-        content = chapter.read_content()
+        content = file_item.read_content()
         if self._chapter_title_label:
-            self._chapter_title_label.set_text(chapter.title)
+            display_title = file_item.name if getattr(file_item, "category", "content") == "resources" else file_item.title
+            self._chapter_title_label.set_text(display_title)
 
         if self.editor:
             self.editor.set_content(content)
@@ -243,6 +248,8 @@ class WorkspaceView:
             img_md = f"\n\n![{target_path.name}](./assets/{target_path.name})\n"
             new_content = self.editor.content + img_md
             self.editor.set_content(new_content)
+            if self.file_tree:
+                self.file_tree.render()
             dialog.close()
             try:
                 ui.notify(f"Inserted image '{target_path.name}'", type="positive")
@@ -280,5 +287,7 @@ class WorkspaceView:
             return
         dialog = ExportDialog(workspace=ws, config_manager=self.state.config_manager)
         dialog.open()
+        if dialog.dialog:
+            dialog.dialog.on("hide", lambda: self.file_tree.render() if self.file_tree else None)
 
 

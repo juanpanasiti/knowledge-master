@@ -59,6 +59,31 @@ def test_asset_endpoints_with_active_workspace(tmp_path: Path) -> None:
     assert fetch_resp.status_code == 200
     assert fetch_resp.content == b"fake_png_data"
 
+    # 6. Test serving dist deliverables (PDF and EPUB)
+    (ws.dist_dir / "sample.pdf").write_bytes(b"%PDF-1.4 test")
+    (ws.dist_dir / "sample.epub").write_bytes(b"PK-epub test")
+
+    pdf_resp = client.get("/api/workspace/dist/sample.pdf")
+    assert pdf_resp.status_code == 200
+    assert "application/pdf" in pdf_resp.headers["content-type"]
+    assert pdf_resp.content == b"%PDF-1.4 test"
+
+    pdf_alias_resp = client.get("/dist/sample.pdf")
+    assert pdf_alias_resp.status_code == 200
+
+    epub_resp = client.get("/api/workspace/dist/sample.epub")
+    assert epub_resp.status_code == 200
+    assert "application/epub+zip" in epub_resp.headers["content-type"]
+    assert epub_resp.content == b"PK-epub test"
+
+    # 7. Test 404 on missing dist file
+    missing_dist_resp = client.get("/api/workspace/dist/missing.pdf")
+    assert missing_dist_resp.status_code == 404
+
+    # 8. Test path traversal on dist endpoint
+    traversal_dist_resp = client.get("/api/workspace/dist/../../secret.txt")
+    assert traversal_dist_resp.status_code in [403, 404]
+
 
 def test_asset_endpoints_without_active_workspace() -> None:
     app = FastAPI()
@@ -71,6 +96,9 @@ def test_asset_endpoints_without_active_workspace() -> None:
 
     resp = client.get("/api/workspace/assets/cover.png")
     assert resp.status_code == 404
+
+    resp_dist = client.get("/api/workspace/dist/sample.pdf")
+    assert resp_dist.status_code == 404
 
     upload_resp = client.post(
         "/api/workspace/upload-asset",

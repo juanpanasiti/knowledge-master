@@ -50,3 +50,21 @@ def test_config_manager_cover_size_persistence(tmp_path: Path) -> None:
     reloaded_small = manager.load_settings()
     assert reloaded_small.cover_size == "small"
 
+
+def test_config_manager_explorer_expanded_sections(tmp_path: Path) -> None:
+    root = tmp_path / "test-km"
+    manager = ConfigManager(root_dir=root)
+
+    # Default fallback
+    assert manager.get_explorer_expanded_sections("book-1") == ["content", "resources"]
+
+    # Persist custom state
+    manager.set_explorer_expanded_sections("book-1", ["content", "assets", "dist"])
+    reloaded = manager.load_settings()
+    assert reloaded.get_explorer_expanded_sections("book-1") == ["content", "assets", "dist"]
+    assert manager.get_explorer_expanded_sections("book-1") == ["content", "assets", "dist"]
+
+    # Another book still gets default
+    assert manager.get_explorer_expanded_sections("book-2") == ["content", "resources"]
+
+

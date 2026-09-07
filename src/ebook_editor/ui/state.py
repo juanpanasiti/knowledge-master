@@ -6,7 +6,7 @@ from typing import Callable
 
 from ebook_editor.core.config import ConfigManager
 from ebook_editor.core.git_service import GitService
-from ebook_editor.core.workspace import ChapterFile, EbookWorkspace, WorkspaceManager
+from ebook_editor.core.workspace import ChapterFile, EbookWorkspace, WorkspaceFile, WorkspaceManager
 
 
 class AppState:
@@ -20,7 +20,7 @@ class AppState:
         self.config_manager = config_manager or ConfigManager()
         self.workspace_manager = workspace_manager or WorkspaceManager(self.config_manager)
         self.current_workspace: EbookWorkspace | None = None
-        self.active_chapter: ChapterFile | None = None
+        self.active_file: WorkspaceFile | None = None
         self.git_service: GitService | None = None
 
         settings = self.config_manager.load_settings()
@@ -30,33 +30,51 @@ class AppState:
 
         # UI listeners for navigation and component state updates
         self._view_change_listeners: list[Callable[[str], None]] = []
-        self._chapter_change_listeners: list[Callable[[ChapterFile | None], None]] = []
+        self._file_change_listeners: list[Callable[[WorkspaceFile | None], None]] = []
         self._workspace_change_listeners: list[Callable[[EbookWorkspace | None], None]] = []
+
+    @property
+    def active_chapter(self) -> ChapterFile | None:
+        """Backward-compatible property alias for active_file."""
+        return self.active_file
+
+    @active_chapter.setter
+    def active_chapter(self, value: ChapterFile | None) -> None:
+        self.active_file = value
 
     def set_active_workspace(self, workspace: EbookWorkspace | None) -> None:
         """Switch current active ebook workspace and initialize GitService."""
         self.current_workspace = workspace
         if workspace:
             self.git_service = GitService(workspace.root)
-            chapters = workspace.list_chapters()
-            self.active_chapter = chapters[0] if chapters else None
+            content_files = workspace.list_content_files()
+            self.active_file = content_files[0] if content_files else None
             self.config_manager.add_recent_ebook(workspace.root)
         else:
             self.git_service = None
-            self.active_chapter = None
+            self.active_file = None
 
         for listener in self._workspace_change_listeners:
             listener(workspace)
 
-    def set_active_chapter(self, chapter: ChapterFile | None) -> None:
-        """Switch currently opened chapter in the editor."""
-        self.active_chapter = chapter
+    def set_active_file(self, file: WorkspaceFile | None) -> None:
+        """Switch currently opened file in the editor (content or resource)."""
+        self.active_file = file
         self.save_status = "Saved"
-        for listener in self._chapter_change_listeners:
-            listener(chapter)
+        for listener in self._file_change_listeners:
+            listener(file)
+
+    def set_active_chapter(self, chapter: ChapterFile | None) -> None:
+        """Backward-compatible alias for set_active_file."""
+        self.set_active_file(chapter)
 
     def on_workspace_changed(self, callback: Callable[[EbookWorkspace | None], None]) -> None:
         self._workspace_change_listeners.append(callback)
 
+    def on_file_changed(self, callback: Callable[[WorkspaceFile | None], None]) -> None:
+        self._file_change_listeners.append(callback)
+
     def on_chapter_changed(self, callback: Callable[[ChapterFile | None], None]) -> None:
-        self._chapter_change_listeners.append(callback)
+        """Backward-compatible alias for on_file_changed."""
+        self.on_file_changed(callback)
+

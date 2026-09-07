@@ -21,6 +21,7 @@ def test_create_ebook_structure(tmp_path: Path) -> None:
     assert (ws.root / "metadata.json").is_file()
     assert (ws.root / "assets" / "cover.png").is_file()
     assert (ws.root / "content" / "1.md").is_file()
+    assert (ws.root / "resources").is_dir()
     assert (ws.root / "dist").is_dir()
     assert ws.ensure_dist_dir() == ws.root / "dist"
 
@@ -33,6 +34,67 @@ def test_create_ebook_structure(tmp_path: Path) -> None:
     assert chapters[0].name == "1.md"
     assert chapters[0].title == "1"
     assert "Python Guide" in chapters[0].read_content()
+
+
+def test_resource_crud_and_multi_folder_listings(tmp_path: Path) -> None:
+    ws = EbookWorkspace(tmp_path / "multi-test-book")
+    ws.ensure_structure()
+
+    assert ws.resources_dir.is_dir()
+    assert len(ws.list_resource_files()) == 0
+
+    # Create resources (e.g. .mmd diagram and .md notes)
+    r1 = ws.create_resource("flowchart.mmd", "graph TD; A-->B;")
+    assert r1.name == "flowchart.mmd"
+    assert r1.category == "resources"
+    assert r1.read_content() == "graph TD; A-->B;"
+
+    r2 = ws.create_resource("notes.md", "# Research Notes")
+    assert r2.name == "notes.md"
+    assert r2.category == "resources"
+
+    # Duplicate creation error
+    with pytest.raises(FileExistsError):
+        ws.create_resource("flowchart.mmd", "graph LR; X-->Y;")
+
+    # Empty name error
+    with pytest.raises(ValueError):
+        ws.create_resource("   ")
+
+    # List resources
+    resources = ws.list_resource_files()
+    assert len(resources) == 2
+    assert [r.name for r in resources] == ["flowchart.mmd", "notes.md"]
+
+    # Rename resource
+    r1_renamed = ws.rename_resource("flowchart.mmd", "architecture.mmd")
+    assert r1_renamed.name == "architecture.mmd"
+    assert not (ws.resources_dir / "flowchart.mmd").exists()
+    assert (ws.resources_dir / "architecture.mmd").exists()
+
+    # Write content to resource
+    r1_renamed.write_content("graph TD; Core-->UI;")
+    assert r1_renamed.read_content() == "graph TD; Core-->UI;"
+
+    # Assets & Dist listing
+    ws.save_asset("sample.png", b"fake-png-data")
+    assert len(ws.list_asset_files()) == 2  # cover.png and sample.png
+
+    (ws.dist_dir / "book.pdf").write_bytes(b"%PDF-1.4")
+    (ws.dist_dir / "book.epub").write_bytes(b"PK-fake-epub")
+    dist_files = ws.list_dist_files()
+    assert len(dist_files) == 2
+    assert [f.name for f in dist_files] == ["book.epub", "book.pdf"]
+
+    # Delete resource
+    ws.delete_resource("architecture.mmd")
+    assert len(ws.list_resource_files()) == 1
+
+    # Delete asset and dist
+    ws.delete_asset("sample.png")
+    assert len(ws.list_asset_files()) == 1
+    ws.delete_dist("book.pdf")
+    assert len(ws.list_dist_files()) == 1
 
 
 def test_natural_sorting_of_chapters(tmp_path: Path) -> None:

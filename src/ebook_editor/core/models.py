@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -50,6 +51,21 @@ class AppSettings(BaseModel):
     smtp_password: str | None = None
     smtp_server: str = "smtp.gmail.com"
     smtp_port: int = 587
+    workspace_ui_state: dict[str, dict[str, Any]] = Field(
+        default_factory=dict,
+        description="Per-workspace UI states such as expanded explorer sections",
+    )
+
+    def get_explorer_expanded_sections(self, workspace_key: str) -> list[str]:
+        """Return expanded accordion sections for a workspace, defaulting to content and resources."""
+        state = self.workspace_ui_state.get(workspace_key, {})
+        return list(state.get("expanded_sections", ["content", "resources"]))
+
+    def set_explorer_expanded_sections(self, workspace_key: str, sections: list[str]) -> None:
+        """Store expanded accordion sections for a workspace."""
+        if workspace_key not in self.workspace_ui_state:
+            self.workspace_ui_state[workspace_key] = {}
+        self.workspace_ui_state[workspace_key]["expanded_sections"] = list(sections)
 
     def add_recent_ebook(self, path: str) -> None:
         """Add an ebook path to recent list, deduplicating and keeping the newest first."""

@@ -23,8 +23,22 @@ A native desktop markdown ebook editor and workspace manager built with Python a
   - Transmit compiled EPUB directly to your Amazon Kindle device via SMTP TLS with one click.
   - Automatic credential resolution cascading from Settings, local `.env`, global `~/.config/ebook-maker/.env`, and system environment variables.
 - **Configurable Cover Sizing**: Settings dialog accessible from the dashboard header with `Small`, `Medium` (default), and `Large` cover presets persisted across sessions.
-- **Local Asset Management & Media Insertion**: Drag & drop, clipboard paste, or file upload for chapter images and ebook covers, automatically resolved through relative paths and rendered instantly in the editor.
-- **Local Ebook Workspaces**: Standardized ebook structure (`metadata.json`, `assets/`, `content/`, `dist/`) with natural chapter numbering (`1 - Title.md`, `1.1 - Section.md`).
+- **Multi-Folder Accordion Explorer**:
+  - Organized into four collapsible accordion sections: **Content**, **Resources**, **Assets**, and **Dist**.
+  - Expansion states are automatically saved per workspace and restored across application restarts.
+  - Distinct color-coded badges and icons reflecting item counts and file types.
+- **Supplementary Resources Directory (`resources/`)**:
+  - Dedicated authoring folder for source diagrams (e.g., Mermaid `.mmd`), research notes (`.md`, `.txt`), and outlines.
+  - Seamlessly opened and edited in Vditor with full autosave and live preview.
+  - Automatically excluded from EPUB and PDF publication to keep deliverables clean.
+- **Interactive Asset Management & Preview Modal**:
+  - Click any image in `assets/` to open a high-resolution preview dialog with file metadata.
+  - 1-click "Copy Markdown Link" button to copy `![name](./assets/filename)` directly to the clipboard.
+  - Drag & drop, clipboard paste (`Ctrl+V`), and manual upload for images and ebook covers.
+- **Build Output Interaction (`dist/`)**:
+  - Direct 1-click opening of compiled `.pdf` files in a browser tab using the browser's native PDF reader.
+  - Direct 1-click download of generated `.epub` files.
+- **Local Ebook Workspaces**: Standardized ebook structure (`metadata.json`, `assets/`, `content/`, `resources/`, `dist/`) with natural chapter and content file sorting (`00 - Intro.md`, `1 - Title.md`, `1.1 - Section.md`).
 - **Integrated Version Control**: Built-in Git staging, unstaging, commit creation, and commit history log.
 - **Informative Tooltips**: Clear tooltips across all toolbar actions, file tree controls, Git buttons, and dashboard items.
 

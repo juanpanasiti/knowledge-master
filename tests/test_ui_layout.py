@@ -154,3 +154,57 @@ async def test_cover_upload_and_manual_image_insert(tmp_path: Path):
     assert img_dialog.closed is True
     assert (ws.assets_dir / "diagram.png").read_bytes() == b"DIAGRAM_BYTES"
     assert "./assets/diagram.png" in mock_ed.content
+
+
+def test_workspace_view_switching_content_and_resources(tmp_path: Path):
+    """Verify that selecting a content or resource file updates the editor content and title."""
+    from ebook_editor.core.workspace import EbookWorkspace
+    from ebook_editor.ui.state import AppState
+    from ebook_editor.ui.workspace_view import WorkspaceView
+
+    ws = EbookWorkspace(tmp_path / "book")
+    ws.ensure_structure()
+    ch1 = ws.create_chapter("01 - Intro", "# Introduction")
+    res1 = ws.create_resource("architecture.mmd", "graph TD; A-->B;")
+
+    state = AppState()
+    state.set_active_workspace(ws)
+
+    class MockLabel:
+        def __init__(self):
+            self.text = ""
+        def set_text(self, t):
+            self.text = t
+        def classes(self, **kwargs):
+            pass
+
+    class MockEditor:
+        def __init__(self):
+            self.content = ""
+        def set_content(self, c):
+            self.content = c
+
+    wv = WorkspaceView.__new__(WorkspaceView)
+    wv.state = state
+    wv.editor = MockEditor()
+    wv._chapter_title_label = MockLabel()
+    wv._word_count_label = MockLabel()
+    wv._save_status_label = MockLabel()
+    wv._right_panel_tab = "metadata"
+    wv.git_panel = None
+
+    # Switch to chapter
+    wv._handle_chapter_selected(ch1)
+    assert wv._chapter_title_label.text == "01 - Intro"
+    assert wv.editor.content == "# Introduction"
+
+    # Switch to resource
+    wv._handle_chapter_selected(res1)
+    assert wv._chapter_title_label.text == "architecture.mmd"
+    assert wv.editor.content == "graph TD; A-->B;"
+
+    # Test save on active resource
+    wv.state.set_active_file(res1)
+    wv._handle_editor_save("graph TD; A-->B; B-->C;")
+    assert res1.read_content() == "graph TD; A-->B; B-->C;"
+

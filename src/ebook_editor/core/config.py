@@ -62,3 +62,16 @@ class ConfigManager:
         self.save_settings(settings)
         return settings
 
+    def get_explorer_expanded_sections(self, workspace_key: str) -> list[str]:
+        """Return expanded explorer sections for the specified workspace slug."""
+        settings = self.load_settings()
+        return settings.get_explorer_expanded_sections(workspace_key)
+
+    def set_explorer_expanded_sections(self, workspace_key: str, sections: list[str]) -> AppSettings:
+        """Update and persist expanded explorer sections for the specified workspace slug."""
+        settings = self.load_settings()
+        settings.set_explorer_expanded_sections(workspace_key, sections)
+        self.save_settings(settings)
+        return settings
+
+

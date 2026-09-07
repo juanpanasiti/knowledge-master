@@ -68,6 +68,38 @@ def register_asset_routes(
 
         return FileResponse(requested_file)
 
+    @app.get("/dist/{file_path:path}")
+    @app.get("/api/workspace/dist/{file_path:path}")
+    async def serve_workspace_dist(file_path: str):
+        """Serve a generated deliverable file (e.g. PDF or EPUB) from the active ebook dist directory."""
+        workspace = get_active_workspace()
+        if not workspace:
+            raise HTTPException(status_code=404, detail="No active ebook workspace.")
+
+        base_dist_dir = workspace.dist_dir.resolve()
+        requested_file = (base_dist_dir / file_path).resolve()
+
+        # Path traversal guard
+        try:
+            requested_file.relative_to(base_dist_dir)
+        except ValueError:
+            raise HTTPException(status_code=403, detail="Access outside dist directory forbidden.")
+
+        if not requested_file.is_file():
+            raise HTTPException(status_code=404, detail=f"Deliverable '{file_path}' not found.")
+
+        media_type = None
+        if requested_file.suffix.lower() == ".pdf":
+            media_type = "application/pdf"
+        elif requested_file.suffix.lower() == ".epub":
+            media_type = "application/epub+zip"
+
+        return FileResponse(
+            requested_file,
+            media_type=media_type,
+            filename=requested_file.name,
+        )
+
     @app.post("/api/workspace/upload-asset")
     async def upload_workspace_asset(file: UploadFile = File(...)):
         """Upload an image into the active ebook assets directory."""

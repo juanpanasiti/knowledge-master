@@ -28,26 +28,31 @@ def slugify(value: str) -> str:
 
 
 @dataclass
-class ChapterFile:
-    """Represents a markdown chapter inside the ebook content directory."""
+class WorkspaceFile:
+    """Represents an editable text or markdown file inside content/ or resources/."""
 
     path: Path
     name: str
+    category: str = "content"  # "content" or "resources"
 
     @property
     def title(self) -> str:
-        """Display title with the .md extension stripped."""
+        """Display title with the extension stripped."""
         return self.path.stem
 
     def read_content(self) -> str:
-        """Read text from this markdown file."""
+        """Read text from this file."""
         return self.path.read_text(encoding="utf-8")
 
     def write_content(self, content: str) -> None:
-        """Atomically persist content to this markdown file."""
-        temp_file = self.path.with_suffix(".tmp")
+        """Atomically persist content to this file."""
+        temp_file = self.path.with_name(f".{self.path.name}.tmp")
         temp_file.write_text(content, encoding="utf-8")
         temp_file.replace(self.path)
+
+
+# Backward-compatible alias for existing chapter references
+ChapterFile = WorkspaceFile
 
 
 class EbookWorkspace:
@@ -58,6 +63,7 @@ class EbookWorkspace:
         self.metadata_path = self.root / "metadata.json"
         self.assets_dir = self.root / "assets"
         self.content_dir = self.root / "content"
+        self.resources_dir = self.root / "resources"
         self.dist_dir = self.root / "dist"
 
     def is_valid(self) -> bool:
@@ -65,9 +71,10 @@ class EbookWorkspace:
         return self.root.is_dir() and self.metadata_path.is_file()
 
     def ensure_structure(self) -> None:
-        """Ensure that assets, content, and dist subdirectories exist."""
+        """Ensure that assets, content, resources, and dist subdirectories exist."""
         self.assets_dir.mkdir(parents=True, exist_ok=True)
         self.content_dir.mkdir(parents=True, exist_ok=True)
+        self.resources_dir.mkdir(parents=True, exist_ok=True)
         self.dist_dir.mkdir(parents=True, exist_ok=True)
         cover_path = self.assets_dir / "cover.png"
         if not cover_path.exists():
@@ -88,7 +95,7 @@ class EbookWorkspace:
         """Persist metadata to metadata.json."""
         metadata.save_to_file(self.metadata_path)
 
-    def list_chapters(self) -> list[ChapterFile]:
+    def list_content_files(self) -> list[WorkspaceFile]:
         """List all markdown files in content/ sorted with natural hierarchical sorting."""
         if not self.content_dir.exists():
             return []
@@ -97,7 +104,42 @@ class EbookWorkspace:
             if f.is_file() and f.suffix.lower() == ".md"
         ]
         sorted_paths = natsorted(md_files, key=lambda p: p.name)
-        return [ChapterFile(path=p, name=p.name) for p in sorted_paths]
+        return [WorkspaceFile(path=p, name=p.name, category="content") for p in sorted_paths]
+
+    def list_chapters(self) -> list[ChapterFile]:
+        """Backward-compatible alias for list_content_files()."""
+        return self.list_content_files()
+
+    def list_resource_files(self) -> list[WorkspaceFile]:
+        """List all supplementary files in resources/ sorted naturally."""
+        if not self.resources_dir.exists():
+            return []
+        files = [
+            f for f in self.resources_dir.iterdir()
+            if f.is_file() and not f.name.startswith(".")
+        ]
+        sorted_paths = natsorted(files, key=lambda p: p.name)
+        return [WorkspaceFile(path=p, name=p.name, category="resources") for p in sorted_paths]
+
+    def list_asset_files(self) -> list[Path]:
+        """List all media files in assets/ sorted naturally."""
+        if not self.assets_dir.exists():
+            return []
+        files = [
+            f for f in self.assets_dir.iterdir()
+            if f.is_file() and not f.name.startswith(".")
+        ]
+        return natsorted(files, key=lambda p: p.name)
+
+    def list_dist_files(self) -> list[Path]:
+        """List all generated deliverable files in dist/ sorted naturally."""
+        if not self.dist_dir.exists():
+            return []
+        files = [
+            f for f in self.dist_dir.iterdir()
+            if f.is_file() and not f.name.startswith(".")
+        ]
+        return natsorted(files, key=lambda p: p.name)
 
     def create_chapter(self, title_or_filename: str, content: str = "") -> ChapterFile:
         """Create a new chapter markdown file in content/."""
@@ -109,7 +151,7 @@ class EbookWorkspace:
         if target_path.exists():
             raise FileExistsError(f"Chapter '{filename}' already exists.")
         target_path.write_text(content, encoding="utf-8")
-        return ChapterFile(path=target_path, name=target_path.name)
+        return WorkspaceFile(path=target_path, name=target_path.name, category="content")
 
     def rename_chapter(self, old_name: str, new_title_or_name: str) -> ChapterFile:
         """Rename an existing chapter file."""
@@ -126,12 +168,47 @@ class EbookWorkspace:
             raise FileExistsError(f"Chapter '{clean_new}' already exists.")
 
         source_path.rename(dest_path)
-        return ChapterFile(path=dest_path, name=dest_path.name)
+        return WorkspaceFile(path=dest_path, name=dest_path.name, category="content")
 
     def delete_chapter(self, name: str) -> None:
         """Delete a chapter file from content/."""
         clean_name = name if name.lower().endswith(".md") else f"{name}.md"
         target_path = self.content_dir / clean_name
+        if target_path.exists():
+            target_path.unlink()
+
+    def create_resource(self, filename: str, content: str = "") -> WorkspaceFile:
+        """Create a new resource file in resources/."""
+        self.ensure_structure()
+        clean_name = filename.strip()
+        if not clean_name:
+            raise ValueError("Filename cannot be empty.")
+        target_path = self.resources_dir / clean_name
+        if target_path.exists():
+            raise FileExistsError(f"Resource '{clean_name}' already exists.")
+        target_path.write_text(content, encoding="utf-8")
+        return WorkspaceFile(path=target_path, name=target_path.name, category="resources")
+
+    def rename_resource(self, old_name: str, new_name: str) -> WorkspaceFile:
+        """Rename an existing resource file."""
+        clean_old = old_name.strip()
+        source_path = self.resources_dir / clean_old
+        if not source_path.exists():
+            raise FileNotFoundError(f"Resource '{clean_old}' not found.")
+
+        clean_new = new_name.strip()
+        if not clean_new:
+            raise ValueError("New filename cannot be empty.")
+        dest_path = self.resources_dir / clean_new
+        if dest_path.exists() and dest_path != source_path:
+            raise FileExistsError(f"Resource '{clean_new}' already exists.")
+
+        source_path.rename(dest_path)
+        return WorkspaceFile(path=dest_path, name=dest_path.name, category="resources")
+
+    def delete_resource(self, name: str) -> None:
+        """Delete a resource file from resources/."""
+        target_path = self.resources_dir / name.strip()
         if target_path.exists():
             target_path.unlink()
 
@@ -142,6 +219,18 @@ class EbookWorkspace:
         target = self.assets_dir / safe_filename
         target.write_bytes(data)
         return target
+
+    def delete_asset(self, filename: str) -> None:
+        """Delete an asset file from assets/."""
+        target = self.assets_dir / Path(filename).name
+        if target.exists():
+            target.unlink()
+
+    def delete_dist(self, filename: str) -> None:
+        """Delete a generated build file from dist/."""
+        target = self.dist_dir / Path(filename).name
+        if target.exists():
+            target.unlink()
 
 
 class WorkspaceManager:
