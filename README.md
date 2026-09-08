@@ -25,6 +25,7 @@ A native desktop markdown ebook editor and workspace manager built with Python a
 - **Configurable Cover Sizing**: Settings dialog accessible from the dashboard header with `Small`, `Medium` (default), and `Large` cover presets persisted across sessions.
 - **Multi-Folder Accordion Explorer**:
   - Organized into four collapsible accordion sections: **Content**, **Resources**, **Assets**, and **Dist**.
+  - Persistent headers keep section titles, icons, item counters, and quick actions visible even when sections are collapsed.
   - Expansion states are automatically saved per workspace and restored across application restarts.
   - Distinct color-coded badges and icons reflecting item counts and file types.
 - **Supplementary Resources Directory (`resources/`)**:

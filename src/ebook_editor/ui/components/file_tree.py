@@ -78,17 +78,21 @@ class FileTreeComponent:
         with ui.expansion(
             value=is_expanded,
             on_value_change=lambda e: self._handle_expansion_change("content", e.value),
-        ).props("dense header-class='px-2 py-1 rounded hover:bg-gray-800/60 text-xs font-semibold text-gray-300'").classes("w-full bg-gray-900/40 rounded border border-gray-800/50"):
-            with ui.row().classes("w-full items-center justify-between slot-header pr-1"):
-                with ui.row().classes("items-center gap-1.5"):
-                    ui.icon("article", size="1rem").classes("text-indigo-400")
-                    ui.label("Content").classes("text-xs font-semibold uppercase tracking-wider text-gray-300")
-                    ui.badge(str(len(content_files)), color="indigo-900").props("dense rounded text-color=indigo-200").classes("text-[10px] px-1.5 py-0")
+        ).props("dense header-class='px-2 py-1 rounded hover:bg-gray-800/60 text-xs font-semibold text-gray-300'").classes("w-full bg-gray-900/40 rounded border border-gray-800/50") as exp:
+            with exp.add_slot("header"):
+                with ui.row().classes("flex-1 items-center justify-between pr-2"):
+                    with ui.row().classes("items-center gap-1.5"):
+                        ui.icon("article", size="1rem").classes("text-indigo-400")
+                        ui.label("Content").classes("text-xs font-semibold uppercase tracking-wider text-gray-300")
+                        ui.badge(str(len(content_files)), color="indigo-900").props("dense rounded text-color=indigo-200").classes("text-[10px] px-1.5 py-0")
 
-                ui.button(
-                    icon="add",
-                    on_click=lambda: self._show_new_file_dialog("content"),
-                ).props("round flat dense size=xs").classes("text-indigo-400 hover:text-white").tooltip("New Content File")
+                    ui.button(
+                        icon="add",
+                    ).props("round flat dense size=xs").classes("text-indigo-400 hover:text-white").tooltip("New Content File").on(
+                        "click",
+                        lambda: self._show_new_file_dialog("content"),
+                        js_handler="(e) => { e.stopPropagation(); emit(); }",
+                    )
 
             with ui.column().classes("w-full p-1 gap-1 items-stretch"):
                 if not content_files:
@@ -107,17 +111,21 @@ class FileTreeComponent:
         with ui.expansion(
             value=is_expanded,
             on_value_change=lambda e: self._handle_expansion_change("resources", e.value),
-        ).props("dense header-class='px-2 py-1 rounded hover:bg-gray-800/60 text-xs font-semibold text-gray-300'").classes("w-full bg-gray-900/40 rounded border border-gray-800/50"):
-            with ui.row().classes("w-full items-center justify-between slot-header pr-1"):
-                with ui.row().classes("items-center gap-1.5"):
-                    ui.icon("lightbulb", size="1rem").classes("text-amber-400")
-                    ui.label("Resources").classes("text-xs font-semibold uppercase tracking-wider text-gray-300")
-                    ui.badge(str(len(resource_files)), color="amber-950").props("dense rounded text-color=amber-300").classes("text-[10px] px-1.5 py-0")
+        ).props("dense header-class='px-2 py-1 rounded hover:bg-gray-800/60 text-xs font-semibold text-gray-300'").classes("w-full bg-gray-900/40 rounded border border-gray-800/50") as exp:
+            with exp.add_slot("header"):
+                with ui.row().classes("flex-1 items-center justify-between pr-2"):
+                    with ui.row().classes("items-center gap-1.5"):
+                        ui.icon("lightbulb", size="1rem").classes("text-amber-400")
+                        ui.label("Resources").classes("text-xs font-semibold uppercase tracking-wider text-gray-300")
+                        ui.badge(str(len(resource_files)), color="amber-950").props("dense rounded text-color=amber-300").classes("text-[10px] px-1.5 py-0")
 
-                ui.button(
-                    icon="add",
-                    on_click=lambda: self._show_new_file_dialog("resources"),
-                ).props("round flat dense size=xs").classes("text-amber-400 hover:text-white").tooltip("New Resource File (.mmd, .md, .txt)")
+                    ui.button(
+                        icon="add",
+                    ).props("round flat dense size=xs").classes("text-amber-400 hover:text-white").tooltip("New Resource File (.mmd, .md, .txt)").on(
+                        "click",
+                        lambda: self._show_new_file_dialog("resources"),
+                        js_handler="(e) => { e.stopPropagation(); emit(); }",
+                    )
 
             with ui.column().classes("w-full p-1 gap-1 items-stretch"):
                 if not resource_files:
@@ -136,17 +144,21 @@ class FileTreeComponent:
         with ui.expansion(
             value=is_expanded,
             on_value_change=lambda e: self._handle_expansion_change("assets", e.value),
-        ).props("dense header-class='px-2 py-1 rounded hover:bg-gray-800/60 text-xs font-semibold text-gray-300'").classes("w-full bg-gray-900/40 rounded border border-gray-800/50"):
-            with ui.row().classes("w-full items-center justify-between slot-header pr-1"):
-                with ui.row().classes("items-center gap-1.5"):
-                    ui.icon("image", size="1rem").classes("text-emerald-400")
-                    ui.label("Assets").classes("text-xs font-semibold uppercase tracking-wider text-gray-300")
-                    ui.badge(str(len(asset_files)), color="emerald-950").props("dense rounded text-color=emerald-300").classes("text-[10px] px-1.5 py-0")
+        ).props("dense header-class='px-2 py-1 rounded hover:bg-gray-800/60 text-xs font-semibold text-gray-300'").classes("w-full bg-gray-900/40 rounded border border-gray-800/50") as exp:
+            with exp.add_slot("header"):
+                with ui.row().classes("flex-1 items-center justify-between pr-2"):
+                    with ui.row().classes("items-center gap-1.5"):
+                        ui.icon("image", size="1rem").classes("text-emerald-400")
+                        ui.label("Assets").classes("text-xs font-semibold uppercase tracking-wider text-gray-300")
+                        ui.badge(str(len(asset_files)), color="emerald-950").props("dense rounded text-color=emerald-300").classes("text-[10px] px-1.5 py-0")
 
-                ui.button(
-                    icon="file_upload",
-                    on_click=self._show_upload_asset_dialog,
-                ).props("round flat dense size=xs").classes("text-emerald-400 hover:text-white").tooltip("Upload Image Asset")
+                    ui.button(
+                        icon="file_upload",
+                    ).props("round flat dense size=xs").classes("text-emerald-400 hover:text-white").tooltip("Upload Image Asset").on(
+                        "click",
+                        self._show_upload_asset_dialog,
+                        js_handler="(e) => { e.stopPropagation(); emit(); }",
+                    )
 
             with ui.column().classes("w-full p-1 gap-1 items-stretch"):
                 if not asset_files:
@@ -165,12 +177,13 @@ class FileTreeComponent:
         with ui.expansion(
             value=is_expanded,
             on_value_change=lambda e: self._handle_expansion_change("dist", e.value),
-        ).props("dense header-class='px-2 py-1 rounded hover:bg-gray-800/60 text-xs font-semibold text-gray-300'").classes("w-full bg-gray-900/40 rounded border border-gray-800/50"):
-            with ui.row().classes("w-full items-center justify-between slot-header pr-1"):
-                with ui.row().classes("items-center gap-1.5"):
-                    ui.icon("inventory_2", size="1rem").classes("text-purple-400")
-                    ui.label("Dist").classes("text-xs font-semibold uppercase tracking-wider text-gray-300")
-                    ui.badge(str(len(dist_files)), color="purple-950").props("dense rounded text-color=purple-300").classes("text-[10px] px-1.5 py-0")
+        ).props("dense header-class='px-2 py-1 rounded hover:bg-gray-800/60 text-xs font-semibold text-gray-300'").classes("w-full bg-gray-900/40 rounded border border-gray-800/50") as exp:
+            with exp.add_slot("header"):
+                with ui.row().classes("flex-1 items-center justify-between pr-2"):
+                    with ui.row().classes("items-center gap-1.5"):
+                        ui.icon("inventory_2", size="1rem").classes("text-purple-400")
+                        ui.label("Dist").classes("text-xs font-semibold uppercase tracking-wider text-gray-300")
+                        ui.badge(str(len(dist_files)), color="purple-950").props("dense rounded text-color=purple-300").classes("text-[10px] px-1.5 py-0")
 
             with ui.column().classes("w-full p-1 gap-1 items-stretch"):
                 if not dist_files:
@@ -330,9 +343,9 @@ class FileTreeComponent:
                         new_f = ws.create_resource(val, init_content)
 
                     self.state.set_active_file(new_f)
+                    ui.notify(f"Created '{new_f.name}'", type="positive")
                     self.render()
                     self.on_select_chapter(new_f)
-                    ui.notify(f"Created '{new_f.name}'", type="positive")
                 except Exception as e:
                     ui.notify(str(e), type="negative")
 
@@ -372,8 +385,8 @@ class FileTreeComponent:
                         self.state.set_active_file(renamed)
                         self.on_select_chapter(renamed)
 
-                    self.render()
                     ui.notify(f"Renamed to '{renamed.name}'", type="positive")
+                    self.render()
                 except Exception as e:
                     ui.notify(str(e), type="negative")
 
@@ -411,8 +424,8 @@ class FileTreeComponent:
                     if next_file:
                         self.on_select_chapter(next_file)
 
-                self.render()
                 ui.notify(f"Deleted '{file_item.name}'", type="info")
+                self.render()
 
             with ui.row().classes("w-full justify-end gap-2 mt-2"):
                 ui.button("Cancel", on_click=dialog.close).props("flat size=sm")
@@ -492,8 +505,8 @@ class FileTreeComponent:
 
                     ws.save_asset(filename, file_bytes)
                     dialog.close()
-                    self.render()
                     ui.notify(f"Uploaded asset '{filename}'", type="positive")
+                    self.render()
                 except Exception as err:
                     ui.notify(f"Upload failed: {err}", type="negative")
 
@@ -512,8 +525,8 @@ class FileTreeComponent:
         ws = self.state.current_workspace
         if ws:
             ws.delete_asset(asset_path.name)
-            self.render()
             ui.notify(f"Deleted asset '{asset_path.name}'", type="info")
+            self.render()
 
     # ==========================================
     # DIST ACTIONS
