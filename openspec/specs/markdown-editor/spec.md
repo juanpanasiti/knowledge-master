@@ -47,11 +47,12 @@ The system SHALL provide interactive actions for exported build deliverables in 
 - **THEN** the application triggers the download of the EPUB file with proper MIME type headers.
 
 ### Requirement: Debounced Autosave
-The system SHALL automatically persist editor changes to the active markdown file after a period of typing inactivity and display save status.
+The system SHALL automatically persist editor changes to the active markdown file after a period of typing inactivity, extract the complete content payload from editor events, update file contents on disk, and update the save status indicator and live word count.
 
 #### Scenario: Typing with autosave triggered
 - **WHEN** the user modifies text in the editor and stops typing for 500 milliseconds
-- **THEN** the system saves the file content to disk and updates the status indicator from "Saving..." to "Saved".
+- **THEN** the system extracts the editor content payload, writes the content to the active chapter file on disk, updates the word count label to match the written words, and updates the status indicator from "Saving..." to "Saved".
+
 
 ### Requirement: Theme Selector with Dark Default
 The editor and user interface SHALL default to a dark theme and SHALL provide an interactive toggle to switch between dark and light themes.
@@ -102,4 +103,30 @@ The sidebar file tree and editor integration SHALL switch active chapters seamle
 #### Scenario: Selecting a different chapter in the sidebar
 - **WHEN** the user clicks on a different chapter in the chapter list
 - **THEN** the editor loads and displays the new chapter content without raising runtime exceptions or breaking client-server event communication.
+
+### Requirement: List Formatting and Outdent Navigation
+The editor SHALL render ordered lists with visible decimal numbering and SHALL allow users to outdent nested list items and break out into root-level normal paragraphs using toolbar buttons or standard keyboard actions.
+
+#### Scenario: Rendering ordered list numbers
+- **WHEN** the user creates an ordered list using `1. item 1` and `2. item 2`
+- **THEN** the items render with clear, visible sequential decimal numbers rather than hidden counters.
+
+#### Scenario: Outdenting and escaping nested lists via keyboard
+- **WHEN** the cursor is on an empty item or paragraph within a nested list and the user presses Enter or Shift+Tab or Backspace at column zero
+- **THEN** the editor decreases the indentation level by one, eventually placing the cursor on a normal paragraph at the root margin of the document.
+
+### Requirement: Dark Mode Element Contrast and Legibility
+The editor SHALL render markdown tables and block elements in dark theme using dark-slate cell backgrounds, legible text colors, and subtle borders without blinding white fills.
+
+#### Scenario: Rendering tables in dark theme
+- **WHEN** a markdown table is displayed in the active editor while dark theme is active
+- **THEN** table header cells render with elevated dark slate backgrounds and light text, and table rows render with dark backgrounds and contrasting text.
+
+### Requirement: Editor Toolbar Tooltip Visibility
+The editor toolbar SHALL display informative tooltips for all formatting actions, oriented downwards to prevent clipping against container boundaries.
+
+#### Scenario: Hovering over toolbar buttons
+- **WHEN** the user hovers the cursor over any toolbar button (such as Bold, Table, Headings, or Outdent)
+- **THEN** a tooltip appears below the button displaying the action name and associated keyboard shortcut.
+
 

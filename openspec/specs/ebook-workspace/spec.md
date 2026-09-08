@@ -29,7 +29,11 @@ Each managed ebook project folder SHALL strictly conform to a standardized layou
 - **THEN** the system automatically creates the `resources/` directory within the ebook project root.
 
 ### Requirement: Metadata Schema Validation
-The system SHALL validate and persist project metadata in `metadata.json` including title, author, description, cover image relative path, tags, publication state (`finished`), creation timestamp, and update timestamp.
+The system SHALL validate and persist project metadata in `metadata.json` including title, author, description, cover image relative path, tags, publication state (`finished`), creation timestamp, and update timestamp, and SHALL tolerate `null` values for optional text fields such as description without crashing.
+
+#### Scenario: Loading metadata with null description
+- **WHEN** the application opens an existing ebook project whose `metadata.json` has `"description": null`
+- **THEN** the system successfully parses the metadata, defaulting description to an empty string without raising validation errors.
 
 #### Scenario: Updating project metadata
 - **WHEN** the user edits the metadata fields in the metadata panel or toggles publication status in the export dialog and saves
@@ -140,5 +144,13 @@ The backend server SHALL register `/assets/{file_path:path}` and `/content/asset
 #### Scenario: Resolving relative markdown asset URLs
 - **WHEN** an image tag in a markdown document references `./assets/photo.png` or `/assets/photo.png`
 - **THEN** the backend serves the corresponding file from the active ebook's `assets/` folder with `200 OK` and the appropriate image content-type header.
+
+### Requirement: Workspace and Dashboard Action Tooltips
+All icon-only action buttons across the workspace navigation header, file tree explorer, Git version control panel, and dashboard SHALL provide descriptive tooltips.
+
+#### Scenario: Hovering over icon-only buttons
+- **WHEN** the user hovers over the chapter options button (`more_vert`), the unstage button (`remove`), or the remove recent button (`close`)
+- **THEN** the application displays a descriptive tooltip clarifying the button's action.
+
 
 
