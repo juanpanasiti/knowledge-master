@@ -85,6 +85,20 @@ class AppSettings(BaseModel):
         if self.last_opened_ebook == normalized:
             self.last_opened_ebook = self.recent_ebooks[0] if self.recent_ebooks else None
 
+    def prune_invalid_recents(self) -> bool:
+        """Remove paths that do not exist or lack metadata.json. Return True if changes were made."""
+        valid: list[str] = []
+        for p_str in self.recent_ebooks:
+            p = Path(p_str)
+            if p.is_dir() and (p / "metadata.json").is_file():
+                valid.append(p_str)
+        if valid != self.recent_ebooks:
+            self.recent_ebooks = valid
+            if self.last_opened_ebook and self.last_opened_ebook not in valid:
+                self.last_opened_ebook = valid[0] if valid else None
+            return True
+        return False
+
     def save_to_file(self, target_path: Path) -> None:
         """Serialize and write settings to a JSON file."""
         target_path.parent.mkdir(parents=True, exist_ok=True)

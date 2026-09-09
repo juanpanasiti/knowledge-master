@@ -46,3 +46,25 @@ def test_dashboard_render_with_custom_and_fallback_covers(tmp_path: Path) -> Non
     config_mgr.set_cover_size("large")
     dashboard.render()
     assert config_mgr.load_settings().cover_size == "large"
+
+
+def test_dashboard_recent_shelf_filters_invalid_workspaces(tmp_path: Path) -> None:
+    """Verify that DashboardView prunes and does not render non-existent or invalid workspaces."""
+    root = tmp_path / "test-km"
+    config_mgr = ConfigManager(root_dir=root)
+    state = AppState(config_manager=config_mgr)
+    dashboard = DashboardView(state, on_open_workspace=lambda _: None)
+
+    # Add an invalid directory (no metadata.json) and a non-existent path
+    invalid_dir = tmp_path / "phantom-book"
+    invalid_dir.mkdir(parents=True)
+    non_existent = tmp_path / "ghost-book"
+
+    config_mgr.add_recent_ebook(invalid_dir)
+    config_mgr.add_recent_ebook(non_existent)
+
+    # Render dashboard - should prune/filter them out cleanly
+    dashboard.render()
+    settings = config_mgr.load_settings()
+    assert settings.recent_ebooks == []
+

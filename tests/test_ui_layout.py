@@ -102,10 +102,11 @@ async def test_cover_upload_and_manual_image_insert(tmp_path: Path):
     from ebook_editor.ui.components.metadata_panel import MetadataPanelComponent
     from ebook_editor.ui.workspace_view import WorkspaceView
 
+    from ebook_editor.core.config import ConfigManager
     ws = EbookWorkspace(tmp_path / "ebook")
     ws.ensure_structure()
     ws.save_metadata(EbookMetadata(title="Test Ebook", author="Test Author"))
-    state = AppState()
+    state = AppState(config_manager=ConfigManager(root_dir=tmp_path))
     state.current_workspace = ws
 
     class MockDialog:
@@ -167,7 +168,8 @@ def test_workspace_view_switching_content_and_resources(tmp_path: Path):
     ch1 = ws.create_chapter("01 - Intro", "# Introduction")
     res1 = ws.create_resource("architecture.mmd", "graph TD; A-->B;")
 
-    state = AppState()
+    from ebook_editor.core.config import ConfigManager
+    state = AppState(config_manager=ConfigManager(root_dir=tmp_path))
     state.set_active_workspace(ws)
 
     class MockLabel:

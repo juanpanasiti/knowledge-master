@@ -88,6 +88,32 @@ def test_ebook_metadata_finished_flag(tmp_path: Path) -> None:
     loaded = EbookMetadata.load_from_file(p)
     assert loaded.finished is True
 
+
+def test_app_settings_prune_invalid_recents(tmp_path: Path) -> None:
+    settings = AppSettings()
+    valid_dir = tmp_path / "valid"
+    valid_dir.mkdir()
+    (valid_dir / "metadata.json").write_text("{}", encoding="utf-8")
+
+    invalid_dir = tmp_path / "invalid"
+    invalid_dir.mkdir()
+
+    missing_dir = tmp_path / "missing"
+
+    settings.add_recent_ebook(str(valid_dir))
+    settings.add_recent_ebook(str(invalid_dir))
+    settings.add_recent_ebook(str(missing_dir))
+
+    assert len(settings.recent_ebooks) == 3
+    changed = settings.prune_invalid_recents()
+    assert changed is True
+    assert settings.recent_ebooks == [str(valid_dir.resolve())]
+    assert settings.last_opened_ebook == str(valid_dir.resolve())
+
+    # Second call with nothing to prune returns False
+    assert settings.prune_invalid_recents() is False
+
+
     # Default should be False
     default_meta = EbookMetadata(title="Draft Book", author="Author")
     assert default_meta.finished is False

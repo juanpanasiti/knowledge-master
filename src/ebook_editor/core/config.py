@@ -48,6 +48,13 @@ class ConfigManager:
         self.save_settings(settings)
         return settings
 
+    def prune_recent_ebooks(self) -> AppSettings:
+        """Remove non-existent or invalid ebook directories from the recent list and save settings."""
+        settings = self.load_settings()
+        if settings.prune_invalid_recents():
+            self.save_settings(settings)
+        return settings
+
     def set_theme(self, theme: str) -> AppSettings:
         """Update active theme ('dark' or 'light') and persist."""
         settings = self.load_settings()

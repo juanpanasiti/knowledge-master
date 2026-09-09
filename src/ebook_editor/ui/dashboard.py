@@ -153,31 +153,37 @@ class DashboardView:
                     ui.label(f"by {author}").classes("w-full text-xs text-gray-400 truncate")
 
     def _render_recent_shelf(self, cfg: dict[str, Any]) -> None:
-        settings = self.state.config_manager.load_settings()
+        settings = self.state.config_manager.prune_recent_ebooks()
         recent_paths = settings.recent_ebooks
 
-        if not recent_paths:
+        valid_workspaces: list[tuple[str, EbookWorkspace, str, str]] = []
+        for path_str in recent_paths:
+            p = Path(path_str)
+            if not p.exists():
+                continue
+
+            ws = EbookWorkspace(p)
+            if not ws.is_valid():
+                continue
+
+            title = p.name
+            author = ""
+            try:
+                meta = ws.load_metadata()
+                title = meta.title
+                author = meta.author
+            except Exception:
+                pass
+
+            valid_workspaces.append((path_str, ws, title, author))
+
+        if not valid_workspaces:
             with ui.card().classes("w-full p-4 text-center border border-dashed border-gray-700 bg-transparent"):
                 ui.label("No recent ebooks opened yet.").classes("text-gray-400 text-sm")
             return
 
         with ui.row().classes("w-full overflow-x-auto overflow-y-hidden flex-nowrap gap-5 pb-3 items-start"):
-            for path_str in recent_paths:
-                p = Path(path_str)
-                if not p.exists():
-                    continue
-
-                ws = EbookWorkspace(p)
-                title = p.name
-                author = ""
-                if ws.is_valid():
-                    try:
-                        meta = ws.load_metadata()
-                        title = meta.title
-                        author = meta.author
-                    except Exception:
-                        pass
-
+            for path_str, ws, title, author in valid_workspaces:
                 self._render_book_card(
                     ws=ws,
                     title=title,
